@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Search, ExternalLink, FileText, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FadeUp, StaggerContainer, StaggerItem } from "@/components/MotionWrappers";
-import { publications, labMembers } from "@/data/labData";
+import LoadingState from "@/components/LoadingState";
+import { getPublications, getLabMembers } from "@/utils/mockData";
 
-function highlightLabMembers(authors: string) {
+function highlightLabMembers(authors: string, labMembers: string[]) {
   const parts = authors.split(/(,\s*)/);
   return parts.map((part, i) => {
     const isLabMember = labMembers.some(m => part.includes(m));
@@ -17,6 +19,15 @@ function highlightLabMembers(authors: string) {
 export default function PublicationsPage() {
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState<number | null>(null);
+
+  const { data: publications = [], isLoading } = useQuery({
+    queryKey: ["publications"],
+    queryFn: getPublications,
+  });
+  const { data: labMembers = [] } = useQuery({
+    queryKey: ["labMembers"],
+    queryFn: getLabMembers,
+  });
 
   const years = [...new Set(publications.map(p => p.year))].sort((a, b) => b - a);
 
@@ -29,7 +40,7 @@ export default function PublicationsPage() {
       }
       return true;
     });
-  }, [search, yearFilter]);
+  }, [search, yearFilter, publications]);
 
   const featured = publications.filter(p => p.featured);
 
@@ -46,6 +57,9 @@ export default function PublicationsPage() {
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <FadeUp><h2 className="text-2xl font-bold text-foreground mb-8">Featured Publications</h2></FadeUp>
+          {isLoading ? (
+            <LoadingState label="Loading publications…" />
+          ) : (
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {featured.map(p => (
               <StaggerItem key={p.slug}>
@@ -64,6 +78,7 @@ export default function PublicationsPage() {
               </StaggerItem>
             ))}
           </StaggerContainer>
+          )}
         </div>
       </section>
 
@@ -125,7 +140,7 @@ export default function PublicationsPage() {
                             className="bg-card p-4 rounded-lg shadow-card hover:shadow-card-hover transition-shadow border-l-4 border-primary"
                           >
                             <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{p.title}</h4>
-                            <p className="text-xs text-muted-foreground mt-1">{highlightLabMembers(p.authors)}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{highlightLabMembers(p.authors, labMembers)}</p>
                             <div className="flex items-center justify-between mt-2">
                               <p className="text-xs text-muted-foreground italic">{p.journal}</p>
                               <div className="flex items-center gap-3">

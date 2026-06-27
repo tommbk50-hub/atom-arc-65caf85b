@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import { FadeUp, StaggerContainer, StaggerItem } from "@/components/MotionWrappers";
-import { newsItems } from "@/data/labData";
+import LoadingState from "@/components/LoadingState";
+import { getNewsItems } from "@/utils/mockData";
 
 const allCategories = ["All", "Publications", "Awards", "Presentations", "Events", "Announcements"];
 
@@ -26,9 +28,14 @@ const badgeColors: Record<string, string> = {
 export default function NewsPage() {
   const [filter, setFilter] = useState("All");
 
+  const { data: newsItems = [], isLoading } = useQuery({
+    queryKey: ["newsItems"],
+    queryFn: getNewsItems,
+  });
+
   const filtered = useMemo(() => {
     return filter === "All" ? newsItems : newsItems.filter(n => n.category === filter);
-  }, [filter]);
+  }, [filter, newsItems]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -57,6 +64,9 @@ export default function NewsPage() {
             </div>
           </FadeUp>
 
+          {isLoading ? (
+            <LoadingState label="Loading news…" />
+          ) : (
           <AnimatePresence mode="wait">
             <motion.div
               key={filter}
@@ -90,6 +100,7 @@ export default function NewsPage() {
               ))}
             </motion.div>
           </AnimatePresence>
+          )}
         </div>
       </section>
     </motion.div>

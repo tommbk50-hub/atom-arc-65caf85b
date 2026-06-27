@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Calendar, DollarSign, Users, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { researchProjects, publications } from "@/data/labData";
+import { getResearchProjectBySlug, getPublications } from "@/utils/mockData";
 import { FadeUp } from "@/components/MotionWrappers";
+import LoadingState from "@/components/LoadingState";
 
 const statusStyles: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700",
@@ -13,7 +15,23 @@ const statusStyles: Record<string, string> = {
 
 export default function ResearchDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const project = researchProjects.find(p => p.slug === slug);
+  const { data: project, isLoading } = useQuery({
+    queryKey: ["researchProject", slug],
+    queryFn: () => getResearchProjectBySlug(slug ?? ""),
+    enabled: !!slug,
+  });
+  const { data: allPublications = [] } = useQuery({
+    queryKey: ["publications"],
+    queryFn: getPublications,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <LoadingState label="Loading project…" />
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -26,7 +44,7 @@ export default function ResearchDetailPage() {
     );
   }
 
-  const relatedPubs = publications.filter(p => p.relatedProject === project.slug);
+  const relatedPubs = allPublications.filter(p => p.relatedProject === project.slug);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

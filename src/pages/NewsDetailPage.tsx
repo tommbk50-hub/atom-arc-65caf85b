@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { newsItems } from "@/data/labData";
+import { getNewsItems } from "@/utils/mockData";
 import { FadeUp } from "@/components/MotionWrappers";
+import LoadingState from "@/components/LoadingState";
 
 const badgeColors: Record<string, string> = {
   Publications: "bg-teal-100 text-teal-700",
@@ -15,8 +17,20 @@ const badgeColors: Record<string, string> = {
 
 export default function NewsDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { data: newsItems = [], isLoading } = useQuery({
+    queryKey: ["newsItems"],
+    queryFn: getNewsItems,
+  });
   const index = newsItems.findIndex(n => n.slug === slug);
   const item = index >= 0 ? newsItems[index] : null;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <LoadingState label="Loading article…" />
+      </div>
+    );
+  }
 
   if (!item) {
     return (

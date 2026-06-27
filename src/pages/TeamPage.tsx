@@ -1,48 +1,12 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Mail, GraduationCap, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FadeUp, StaggerContainer, StaggerItem, CardHover } from "@/components/MotionWrappers";
-
-interface TeamMember {
-  name: string;
-  role: string;
-  education: string;
-  research: string;
-  bio?: string;
-  email?: string;
-  category: string;
-  image: string;
-}
-
-const pi: TeamMember = {
-  name: "Dr. Elena Martinez",
-  role: "Associate Professor, Dept. of Chemistry & Biochemistry",
-  education: "PhD Computational Chemistry (Stanford, 2015), BS Chemistry (MIT, 2009)",
-  research: "Machine learning for drug discovery, protein dynamics, molecular simulation methods",
-  bio: "Dr. Martinez leads the Molecular Dynamics Lab with a focus on computational approaches to understand and predict protein-drug interactions. Her work has been recognized with the NSF CAREER Award and the ACS Division of Computers in Chemistry Young Investigator Award.",
-  email: "e.martinez@university.edu",
-  category: "PI",
-  image: "https://images.pexels.com/photos/5905857/pexels-photo-5905857.jpeg?auto=compress&cs=tinysrgb&w=600",
-};
-
-const teamMembers: TeamMember[] = [
-  { name: "Dr. James Chen", role: "Postdoctoral Researcher", education: "PhD UC Berkeley 2022", research: "Machine Learning & Drug Discovery", category: "Postdocs", image: "https://images.pexels.com/photos/5905709/pexels-photo-5905709.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { name: "Dr. Sarah Williams", role: "Postdoctoral Researcher", education: "PhD Cambridge 2023", research: "Molecular Simulation Methods", category: "Postdocs", image: "https://images.pexels.com/photos/5905497/pexels-photo-5905497.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { name: "Alex Rivera", role: "PhD Student (4th year)", education: "", research: "Protein folding mechanisms in neurodegenerative diseases", category: "PhD Students", image: "https://images.pexels.com/photos/8942090/pexels-photo-8942090.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { name: "Maya Patel", role: "PhD Student (3rd year)", education: "", research: "Drug binding kinetics and optimization", category: "PhD Students", image: "https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { name: "Jordan Kim", role: "PhD Student (2nd year)", education: "", research: "Enzyme catalysis mechanisms", category: "PhD Students", image: "https://images.pexels.com/photos/5905445/pexels-photo-5905445.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { name: "Priya Sharma", role: "PhD Student (1st year)", education: "", research: "Antibody-antigen interactions", category: "PhD Students", image: "https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { name: "Sam Taylor", role: "Undergraduate (Senior, Chemistry)", education: "", research: "Machine learning model development", category: "Undergraduates", image: "https://images.pexels.com/photos/5905555/pexels-photo-5905555.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { name: "Chris Anderson", role: "Undergraduate (Junior, CS)", education: "", research: "Building data pipeline infrastructure", category: "Undergraduates", image: "https://images.pexels.com/photos/5905529/pexels-photo-5905529.jpeg?auto=compress&cs=tinysrgb&w=400" },
-];
-
-const alumni = [
-  { name: "Dr. Michael Zhang", position: "Assistant Professor, University of Washington", year: "2024" },
-  { name: "Dr. Lisa Johnson", position: "Senior Scientist, Pfizer", year: "2023" },
-  { name: "Dr. Ahmed Hassan", position: "Postdoc, Max Planck Institute", year: "2022" },
-];
+import LoadingState from "@/components/LoadingState";
+import { getPrincipalInvestigator, getTeamMembers, getAlumni, type TeamMember } from "@/utils/mockData";
 
 const categories = ["All", "Postdocs", "PhD Students", "Undergraduates"];
 
@@ -53,6 +17,19 @@ function getInitials(name: string) {
 export default function TeamPage() {
   const [filter, setFilter] = useState("All");
   const [selected, setSelected] = useState<TeamMember | null>(null);
+
+  const { data: pi, isLoading: piLoading } = useQuery({
+    queryKey: ["principalInvestigator"],
+    queryFn: getPrincipalInvestigator,
+  });
+  const { data: teamMembers = [], isLoading: membersLoading } = useQuery({
+    queryKey: ["teamMembers"],
+    queryFn: getTeamMembers,
+  });
+  const { data: alumni = [] } = useQuery({
+    queryKey: ["alumni"],
+    queryFn: getAlumni,
+  });
 
   const filtered = filter === "All" ? teamMembers : teamMembers.filter(m => m.category === filter);
   const grouped = categories.slice(1).map(cat => ({ cat, members: filtered.filter(m => m.category === cat) })).filter(g => g.members.length > 0);
@@ -69,6 +46,9 @@ export default function TeamPage() {
 
       <div className="container mx-auto px-4 py-16">
         {/* PI Section */}
+        {piLoading || !pi ? (
+          <LoadingState label="Loading team…" className="mb-16" />
+        ) : (
         <FadeUp>
           <div className="bg-card rounded-xl shadow-card p-6 lg:p-10 mb-16">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -96,6 +76,7 @@ export default function TeamPage() {
             </div>
           </div>
         </FadeUp>
+        )}
 
         {/* Filters */}
         <FadeUp>
@@ -115,7 +96,10 @@ export default function TeamPage() {
         </FadeUp>
 
         {/* Team Grid */}
-        {grouped.map(({ cat, members }) => (
+        {membersLoading ? (
+          <LoadingState label="Loading members…" />
+        ) : (
+          grouped.map(({ cat, members }) => (
           <div key={cat} className="mb-12">
             <h3 className="text-2xl font-bold text-foreground mb-6 pb-2 border-b-2 border-primary">{cat}</h3>
             <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -142,7 +126,8 @@ export default function TeamPage() {
               ))}
             </StaggerContainer>
           </div>
-        ))}
+          ))
+        )}
 
         {/* Alumni */}
         <FadeUp>

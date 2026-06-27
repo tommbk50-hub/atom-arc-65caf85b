@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, BookOpen, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { publications, labMembers, researchProjects } from "@/data/labData";
+import { getPublicationBySlug, getLabMembers, getResearchProjects } from "@/utils/mockData";
 import { FadeUp } from "@/components/MotionWrappers";
+import LoadingState from "@/components/LoadingState";
 
-function highlightLabMembers(authors: string) {
+function highlightLabMembers(authors: string, labMembers: string[]) {
   const parts = authors.split(/(,\s*)/);
   return parts.map((part, i) => {
     const isLabMember = labMembers.some(m => part.includes(m));
@@ -15,7 +17,27 @@ function highlightLabMembers(authors: string) {
 
 export default function PublicationDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const pub = publications.find(p => p.slug === slug);
+  const { data: pub, isLoading } = useQuery({
+    queryKey: ["publication", slug],
+    queryFn: () => getPublicationBySlug(slug ?? ""),
+    enabled: !!slug,
+  });
+  const { data: labMembers = [] } = useQuery({
+    queryKey: ["labMembers"],
+    queryFn: getLabMembers,
+  });
+  const { data: researchProjects = [] } = useQuery({
+    queryKey: ["researchProjects"],
+    queryFn: getResearchProjects,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <LoadingState label="Loading publication…" />
+      </div>
+    );
+  }
 
   if (!pub) {
     return (
@@ -38,7 +60,7 @@ export default function PublicationDetailPage() {
             <ArrowLeft className="mr-1 h-4 w-4" /> Back to Publications
           </Link>
           <h1 className="text-2xl lg:text-4xl font-extrabold text-primary-foreground tracking-tighter max-w-4xl">{pub.title}</h1>
-          <p className="text-primary-foreground/70 mt-4">{highlightLabMembers(pub.authors)}</p>
+          <p className="text-primary-foreground/70 mt-4">{highlightLabMembers(pub.authors, labMembers)}</p>
         </div>
       </section>
 
