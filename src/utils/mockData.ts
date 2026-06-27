@@ -1,10 +1,13 @@
 /**
  * Local mock data service.
  *
- * This module replaces any remote/backend data layer with an in-memory store
- * that is seeded from plain TypeScript arrays. Every read and write function is
- * asynchronous and mimics network latency using a `Promise` delay, so the
- * frontend loading states behave exactly as they would against a real API.
+ * This module replaces any remote/backend data layer with a `localStorage`
+ * backed store that is seeded from plain TypeScript arrays. Data is serialized
+ * to JSON so that every create/update/delete mutation is persisted in the
+ * browser and survives page reloads without needing a backend server. Every
+ * read and write function is asynchronous and mimics network latency using a
+ * `Promise` delay, so the frontend loading states behave exactly as they would
+ * against a real API.
  */
 import {
   researchProjects as seedResearchProjects,
@@ -109,14 +112,89 @@ function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-const store = {
-  researchProjects: clone(seedResearchProjects) as ResearchProject[],
-  publications: clone(seedPublications) as Publication[],
-  newsItems: clone(seedNewsItems) as NewsItem[],
-  labMembers: clone(seedLabMembers) as string[],
-  principalInvestigator: clone(principalInvestigator) as TeamMember,
-  teamMembers: clone(seedTeamMembers) as TeamMember[],
-  alumni: clone(seedAlumni) as Alumnus[],
+// ---------------------------------------------------------------------------
+// localStorage persistence layer
+// ---------------------------------------------------------------------------
+
+/**
+ * Prefix applied to every key written to `localStorage` so the mock data does
+ * not collide with other values stored by the application.
+ */
+const STORAGE_PREFIX = "atom-arc:";
+
+type StoreShape = {
+  researchProjects: ResearchProject[];
+  publications: Publication[];
+  newsItems: NewsItem[];
+  labMembers: string[];
+  principalInvestigator: TeamMember;
+  teamMembers: TeamMember[];
+  alumni: Alumnus[];
+};
+
+/**
+ * Returns the `localStorage` implementation if it is available (for example in
+ * a browser or jsdom test environment) or `undefined` when running in an
+ * environment without one (such as server-side rendering).
+ */
+function getStorage(): Storage | undefined {
+  try {
+    if (typeof localStorage !== "undefined") return localStorage;
+  } catch {
+    // Accessing localStorage can throw (e.g. disabled cookies); fall through.
+  }
+  return undefined;
+}
+
+function storageKey(key: keyof StoreShape): string {
+  return `${STORAGE_PREFIX}${key}`;
+}
+
+/**
+ * Serializes a store slice to JSON and writes it to `localStorage`. Silently
+ * no-ops when storage is unavailable or quota is exceeded so the in-memory
+ * store keeps working.
+ */
+function persist<K extends keyof StoreShape>(key: K, value: StoreShape[K]): void {
+  const storage = getStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(storageKey(key), JSON.stringify(value));
+  } catch {
+    // Ignore write errors (e.g. storage full or unavailable).
+  }
+}
+
+/**
+ * Loads a store slice from `localStorage`, falling back to a freshly cloned
+ * seed when nothing is persisted yet or the stored JSON is invalid. The seed is
+ * written back so subsequent loads read the persisted copy.
+ */
+function load<K extends keyof StoreShape>(key: K, seed: StoreShape[K]): StoreShape[K] {
+  const storage = getStorage();
+  if (storage) {
+    const raw = storage.getItem(storageKey(key));
+    if (raw !== null) {
+      try {
+        return JSON.parse(raw) as StoreShape[K];
+      } catch {
+        // Corrupted JSON: fall back to seeding below.
+      }
+    }
+  }
+  const seeded = clone(seed);
+  persist(key, seeded);
+  return seeded;
+}
+
+const store: StoreShape = {
+  researchProjects: load("researchProjects", seedResearchProjects as ResearchProject[]),
+  publications: load("publications", seedPublications as Publication[]),
+  newsItems: load("newsItems", seedNewsItems as NewsItem[]),
+  labMembers: load("labMembers", seedLabMembers as string[]),
+  principalInvestigator: load("principalInvestigator", principalInvestigator),
+  teamMembers: load("teamMembers", seedTeamMembers),
+  alumni: load("alumni", seedAlumni),
 };
 
 // ---------------------------------------------------------------------------
@@ -202,6 +280,7 @@ export async function getAlumni(): Promise<Alumnus[]> {
 export async function createResearchProject(project: ResearchProject): Promise<ResearchProject> {
   await delay();
   store.researchProjects.push(clone(project));
+  persist("researchProjects", store.researchProjects);
   return clone(project);
 }
 
@@ -213,6 +292,7 @@ export async function updateResearchProject(
   const index = store.researchProjects.findIndex((p) => p.slug === slug);
   if (index === -1) return undefined;
   store.researchProjects[index] = { ...store.researchProjects[index], ...clone(updates) };
+  persist("researchProjects", store.researchProjects);
   return clone(store.researchProjects[index]);
 }
 
@@ -221,12 +301,14 @@ export async function deleteResearchProject(slug: string): Promise<boolean> {
   const index = store.researchProjects.findIndex((p) => p.slug === slug);
   if (index === -1) return false;
   store.researchProjects.splice(index, 1);
+  persist("researchProjects", store.researchProjects);
   return true;
 }
 
 export async function createPublication(publication: Publication): Promise<Publication> {
   await delay();
   store.publications.push(clone(publication));
+  persist("publications", store.publications);
   return clone(publication);
 }
 
@@ -238,6 +320,7 @@ export async function updatePublication(
   const index = store.publications.findIndex((p) => p.slug === slug);
   if (index === -1) return undefined;
   store.publications[index] = { ...store.publications[index], ...clone(updates) };
+  persist("publications", store.publications);
   return clone(store.publications[index]);
 }
 
@@ -246,12 +329,14 @@ export async function deletePublication(slug: string): Promise<boolean> {
   const index = store.publications.findIndex((p) => p.slug === slug);
   if (index === -1) return false;
   store.publications.splice(index, 1);
+  persist("publications", store.publications);
   return true;
 }
 
 export async function createNewsItem(item: NewsItem): Promise<NewsItem> {
   await delay();
   store.newsItems.push(clone(item));
+  persist("newsItems", store.newsItems);
   return clone(item);
 }
 
@@ -263,6 +348,7 @@ export async function updateNewsItem(
   const index = store.newsItems.findIndex((n) => n.slug === slug);
   if (index === -1) return undefined;
   store.newsItems[index] = { ...store.newsItems[index], ...clone(updates) };
+  persist("newsItems", store.newsItems);
   return clone(store.newsItems[index]);
 }
 
@@ -271,5 +357,6 @@ export async function deleteNewsItem(slug: string): Promise<boolean> {
   const index = store.newsItems.findIndex((n) => n.slug === slug);
   if (index === -1) return false;
   store.newsItems.splice(index, 1);
+  persist("newsItems", store.newsItems);
   return true;
 }
