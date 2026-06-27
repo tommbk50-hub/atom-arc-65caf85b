@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { FadeUp, StaggerContainer, StaggerItem, CardHover } from "@/components/MotionWrappers";
 import { Sparkles, Brain, Target, Wrench, ArrowRight } from "lucide-react";
-import { researchProjects } from "@/data/labData";
+import LoadingState from "@/components/LoadingState";
+import { getResearchProjects } from "@/utils/mockData";
 
 const themes = [
   { icon: Sparkles, label: "Computational Drug Discovery", desc: "AI and simulation for therapeutics" },
@@ -19,6 +21,11 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function ResearchPage() {
+  const { data: researchProjects = [], isLoading } = useQuery({
+    queryKey: ["researchProjects"],
+    queryFn: getResearchProjects,
+  });
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       {/* Hero */}
@@ -51,6 +58,9 @@ export default function ResearchPage() {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <FadeUp><h2 className="text-2xl font-bold text-foreground mb-10">Current Projects</h2></FadeUp>
+          {isLoading ? (
+            <LoadingState label="Loading projects…" />
+          ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {researchProjects.map((p, i) => (
               <FadeUp key={p.slug} delay={i * 0.1}>
@@ -91,6 +101,7 @@ export default function ResearchPage() {
               </FadeUp>
             ))}
           </div>
+          )}
         </div>
       </section>
     </motion.div>
