@@ -67,9 +67,9 @@ const featuredResearch = [
 ];
 
 const recentNews = [
-  { date: "Jan 15, 2025", slug: "nsf-career-award-2025", category: "Awards", text: "Dr. Elena Martinez receives NSF CAREER Award" },
-  { date: "Dec 3, 2024", slug: "nature-communications-ai-drug-discovery", category: "Publications", text: "New Nature Communications paper on AI drug discovery" },
-  { date: "Nov 18, 2024", slug: "best-poster-biophysical-society-2024", category: "Awards", text: "PhD student Maya Patel wins Best Poster at Biophysical Society Meeting" },
+  { date: "May 2, 2026", slug: "nsf-career-award-2025", category: "New Project: SARS-CoV-2 Helicase", text: "Coronavirus antivirals: Targeting the SARS-CoV-2 Helicase" },
+  { date: "June 3, 2026", slug: "nature-communications-ai-drug-discovery", category: "New Project: Bromodomain-Containing Protein 4 (BRD4) ", text: "BRD4 is an epigenetic "reader" protein that binds to acetylated histones to regulate gene transcription, including the transcription of core oncogenes like c-Myc. BRD4 features a deep, highly druggable acetyl-lysine binding pocket that is exceptionally well-suited for FBDD." },
+  { date: "June 18, 2026", slug: "best-poster-biophysical-society-2024", category: "New Project: Cyclin-Dependent Kinase-2 (CDK2)", text: "CDKs are the core drivers of the cell cycle. Their dysregulation leads directly to unchecked cellular proliferation" },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -104,7 +104,7 @@ export default function HomePage() {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="mt-6 text-lg text-slate-300 leading-relaxed max-w-2xl"
             >
-              The Molecular Dynamics Lab combines machine learning, molecular simulation, and structural biology to accelerate the development of life-saving therapeutics.
+              The Open Drug Designs project combines machine learning, molecular simulations, and structural biology to accelerate the development of life-saving therapeutics.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
