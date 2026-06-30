@@ -37,9 +37,8 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
 
 const stats = [
   { icon: Users, label: "Active Researchers", value: 12, suffix: "" },
-  { icon: BookOpen, label: "Publications (5 yrs)", value: 47, suffix: "" },
+  { icon: BookOpen, label: "References", value: 47, suffix: "" },
   { icon: FlaskConical, label: "Research Projects", value: 5, suffix: "" },
-  { icon: DollarSign, label: "Active Funding", value: 2.3, suffix: "M" },
 ];
 
 const featuredResearch = [
@@ -47,7 +46,7 @@ const featuredResearch = [
     icon: Sparkles,
     title: "AI-Driven Drug Discovery Platform",
     slug: "ai-driven-drug-discovery-platform",
-    description: "Developing machine learning models to predict drug-target binding affinity with 94% accuracy.",
+    description: "Using machine learning models to predict druggable pockets and drug-target binding affinities.",
     image: "https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
@@ -61,7 +60,7 @@ const featuredResearch = [
     icon: Target,
     title: "Cancer Therapeutic Targets",
     slug: "novel-therapeutic-targets-cancer",
-    description: "Identifying novel protein interactions for precision oncology.",
+    description: "Identifying novel protein-ligand interactions for precision oncology.",
     image: "https://images.pexels.com/photos/3938022/pexels-photo-3938022.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
 ];
