@@ -51,9 +51,9 @@ const featuredResearch = [
   },
   {
     icon: Brain,
-    title: "Protein Misfolding Mechanisms",
+    title: "Cheminformatics and Bioinformatics",
     slug: "protein-misfolding-neurodegenerative-diseases",
-    description: "Uncovering molecular pathways in Alzheimer's and Parkinson's diseases.",
+    description: "Automated drug design, pharmacophore screening, virtual screening, molecular dynamics.",
     image: "https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
@@ -66,7 +66,7 @@ const featuredResearch = [
 ];
 
 const recentNews = [
-  { date: "May 2, 2026", slug: "nsf-career-award-2025", category: "New Project: SARS-CoV-2 Helicase", text: "Coronavirus antivirals: Targeting the SARS-CoV-2 Helicase" },
+  { date: "May 2, 2026", slug: "nsf-career-award-2025", category: "New Project: SARS-CoV-2 Helicase", text: "The SARS-CoV-2 Helicase remains a highly conserved target essential to the Sviral replicase complex. Desite numerous fragments, no effective binder currently exists due to high protein flexibility." },
   { date: "June 3, 2026", slug: "nature-communications-ai-drug-discovery", category: "New Project: Bromodomain-Containing Protein 4 (BRD4) ", text: "BRD4 is an epigenetic \"reader\" protein that binds to acetylated histones to regulate gene transcription, including the transcription of core oncogenes like c-Myc. BRD4 features a deep, highly druggable acetyl-lysine binding pocket that is exceptionally well-suited for FBDD." },
   { date: "June 18, 2026", slug: "best-poster-biophysical-society-2024", category: "New Project: Cyclin-Dependent Kinase-2 (CDK2)", text: "CDKs are the core drivers of the cell cycle. Their dysregulation leads directly to unchecked cellular proliferation" },
 ];
